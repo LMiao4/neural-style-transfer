@@ -1,4 +1,4 @@
-﻿from __future__ import print_function
+from __future__ import print_function
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -9,16 +9,16 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import copy
 
-
 use_cuda = torch.cuda.is_available()
 dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
-
 
 imgsize = 256 if use_cuda else 128
 loader = transforms.Compose([
     transforms.Resize(imgsize),
     transforms.ToTensor()
 ])
+
+
 def image_loader(image_name):
     image = Image.open(image_name)
     image = Variable(loader(image))
@@ -32,10 +32,12 @@ class ContentLoss(nn.Module):
         self.target = target.detach() * weight
         self.weight = weight
         self.criterion = nn.MSELoss()
+
     def forward(self, input_):
         self.loss = self.criterion(input_ * self.weight, self.target)
         self.output = input_
         return self.output
+
     def backward(self, retain_graph=True):
         self.loss.backward(retain_graph=retain_graph)
         return self.loss
@@ -47,6 +49,8 @@ class GramMatrix(nn.Module):
         features = input_.view(a * b, c * d)
         G = torch.mm(features, features.t())
         return G.div(a * b * c * d)
+
+
 class StyleLoss(nn.Module):
     def __init__(self, target, weight):
         super(StyleLoss, self).__init__()
@@ -54,12 +58,14 @@ class StyleLoss(nn.Module):
         self.weight = weight
         self.gram = GramMatrix()
         self.criterion = nn.MSELoss()
+
     def forward(self, input_):
         self.output = input_.clone()
         self.G = self.gram(input_)
         self.G.mul_(self.weight)
         self.loss = self.criterion(self.G, self.target)
         return self.output
+
     def backward(self, retain_graph=True):
         self.loss.backward(retain_graph=retain_graph)
         return self.loss
@@ -70,6 +76,8 @@ if use_cuda:
     cnn = cnn.cuda()
 content_layers_default = ['conv_4']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+
+
 def get_style_model_and_losses(cnn, style_img, content_img,
                                style_weight=1000, content_weight=1,
                                content_layers=content_layers_default,
@@ -123,11 +131,14 @@ def get_input_param_optimizer(input_img):
     input_param = nn.Parameter(input_img.data)
     optimizer = optim.LBFGS([input_param])
     return input_param, optimizer
+
+
 def run_style_transfer(cnn, content_img, style_img, input_img, num_steps=300,
                        style_weight=1000, content_weight=1):
     print('[INFO]:Building the style transfer model...')
     model, style_losses, content_losses = get_style_model_and_losses(cnn,
-                                            style_img, content_img, style_weight, content_weight)
+                                                                     style_img, content_img, style_weight,
+                                                                     content_weight)
     input_param, optimizer = get_input_param_optimizer(input_img)
     print('[INFO]:Optimizing...')
     run = [0]
@@ -150,13 +161,12 @@ def run_style_transfer(cnn, content_img, style_img, input_img, num_steps=300,
                 ))
                 print('')
             return style_score + content_score
+
         optimizer.step(closure)
     input_param.data.clamp_(0, 1)
     return input_param.data
 
-
-
-
+"""
 if __name__ == '__main__':
     # style images
     style_img = image_loader('./style/1.jpg').type(dtype)
@@ -164,7 +174,7 @@ if __name__ == '__main__':
     subject_img = image_loader('./subject/1.jpg').type(dtype)
     input_img = subject_img.clone()
     assert style_img.size() == subject_img.size(), \
-            "we need to import style and content images of the same size"
+        "we need to import style and content images of the same size"
     output = run_style_transfer(cnn, subject_img, style_img, input_img, num_steps=450)
     image = output.clone().cpu()
     image = image.view(3, imgsize, imgsize)
@@ -173,3 +183,4 @@ if __name__ == '__main__':
     image.save('./result.jpg')
     plt.show(image)
     plt.title('Result')
+"""
