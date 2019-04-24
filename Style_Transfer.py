@@ -166,7 +166,11 @@ def run_style_transfer(cnn, content_img, style_img, input_img, num_steps=300,
     input_param.data.clamp_(0, 1)
     return input_param.data
 
+
 """
+Test Code
+"""
+
 if __name__ == '__main__':
     # style images
     style_img = image_loader('./style/1.jpg').type(dtype)
@@ -183,4 +187,3 @@ if __name__ == '__main__':
     image.save('./result.jpg')
     plt.show(image)
     plt.title('Result')
-"""
