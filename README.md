@@ -7,6 +7,8 @@ A python individual project in EE551. <br>Author: Luoyuan Mao
 * matplotlib <br>
 ## Purposals
 This project provides a method to transfer the style of one image to the subject of another image. Applying the styles of different images gives interesting results. 
+## Reference
+Reference code, Pre-training model and Tutorials from https://pytorch.org
 ## Example
 Suppose the two inputs are <br>
 * style image: <br>
